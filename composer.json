@@ -1,0 +1,20 @@
+{
+    "name": "wds/util",
+    "description": "wds工具",
+    "autoload": {
+        "psr-4": {
+            "Wds\\Util\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "wds"
+        }
+    ],
+    "require": {
+        "php":">=7.1",
+        "ext-bcmath": "*",
+        "ext-curl": "*",
+        "ext-json": "*"
+    }
+}
