@@ -1,6 +1,7 @@
 {
     "name": "wds/util",
     "description": "wds工具",
+    "license": "MIT",
     "autoload": {
         "psr-4": {
             "Wds\\Util\\": "src/"
