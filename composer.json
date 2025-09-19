@@ -9,7 +9,8 @@
     },
     "authors": [
         {
-            "name": "wds"
+            "name": "wds",
+            "email": "382626123@qq.com"
         }
     ],
     "require": {
