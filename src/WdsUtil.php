@@ -5,21 +5,21 @@ class WdsUtil{
 
 
     /**
-     * @param $lenght
+     * @param int $length
      * @return string
-     * @throws \Random\RandomException
+     * @throws \Exception
      * 获取随机数
      */
-    public static function uniqidReal($lenght = 13):string
+    public static function uniqidReal(int $length = 13):string
     {
         if (function_exists("random_bytes")) {
-            $bytes = random_bytes(ceil($lenght / 2));
+            $bytes = random_bytes(ceil($length / 2));
         } elseif (function_exists("openssl_random_pseudo_bytes")) {
-            $bytes = openssl_random_pseudo_bytes(ceil($lenght / 2));
+            $bytes = openssl_random_pseudo_bytes(ceil($length / 2));
         } else {
             throw new \Exception("no cryptographically secure random function available");
         }
-        return substr(bin2hex($bytes), 0, $lenght);
+        return substr(bin2hex($bytes), 0, $length);
     }
 
 
@@ -110,5 +110,123 @@ class WdsUtil{
         }
 
         return false;
+    }
+
+
+
+    public static function httpRequest(
+        string $url,
+        string $method = 'GET',
+        array  $data = [],
+        array  $headers = [],
+        bool   $sslVerify = false
+    )
+    {
+        // 初始化cURL
+        $ch = curl_init();
+
+        // 标准化请求方法（转为大写）
+        $method = strtoupper($method);
+
+        // 设置基础选项
+        $options = [
+            CURLOPT_URL => $url,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_TIMEOUT => 30,
+            CURLOPT_SSL_VERIFYPEER => $sslVerify,
+            CURLOPT_SSL_VERIFYHOST => $sslVerify ? 2 : 0,
+            CURLOPT_HTTPHEADER => $headers
+        ];
+
+        // 根据请求方法设置特定选项
+        switch ($method) {
+            case 'POST':
+                $options[CURLOPT_POST] = true;
+                $options[CURLOPT_POSTFIELDS] = json_encode($data, JSON_UNESCAPED_UNICODE);
+                break;
+
+            case 'PUT':
+                $options[CURLOPT_CUSTOMREQUEST] = 'PUT';
+                $options[CURLOPT_POSTFIELDS] = http_build_query($data, JSON_UNESCAPED_UNICODE);
+                break;
+
+            case 'GET':
+                // GET请求将数据拼接到URL
+                if (!empty($data)) {
+                    $queryString = json_encode($data);
+                    $options[CURLOPT_URL] = $url . (strpos($url, '?') === false ? '?' : '&') . $queryString;
+                }
+                break;
+
+            case 'DELETE':
+                $options[CURLOPT_CUSTOMREQUEST] = 'DELETE';
+                if (!empty($data)) {
+                    $options[CURLOPT_POSTFIELDS] = json_encode($data, JSON_UNESCAPED_UNICODE);
+                }
+                break;
+
+            default:
+                curl_close($ch);
+                throw new \InvalidArgumentException("不支持的请求方法: {$method}");
+        }
+
+        // 设置cURL选项
+        curl_setopt_array($ch, $options);
+
+        // 执行请求
+        $response = curl_exec($ch);
+
+        // 检查cURL错误
+        if (curl_errno($ch)) {
+            $error = curl_error($ch);
+            curl_close($ch);
+            throw new \RuntimeException("请求失败: " . $error);
+        }
+
+        // 获取响应状态码
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        // 解析JSON响应
+        $responseData = json_decode($response, true);
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            throw new \RuntimeException("响应解析失败: " . json_last_error_msg());
+        }
+
+        // 根据状态码返回结果
+        return $httpCode === 200 ? $responseData : false;
+    }
+
+    /**
+     * 格式化参数格式化成url参数
+     */
+    public static function toUrlParams($param): string
+    {
+        $buff = "";
+        foreach ($param as $k => $v)
+        {
+            if($k != "sign" && $v != "" && !is_array($v)){
+                $buff .= $k . "=" . $v . "&";
+            }
+        }
+        return trim($buff, "&");
+    }
+
+    /**
+     *
+     * 产生随机字符串，不长于32位
+     * @param int $length
+     * @return  string
+     * 产生的随机字符串
+     */
+    public static function getNonceStr(int $length = 32):string
+    {
+        $chars = "abcdefghijklmnopqrstuvwxyz0123456789";
+        $str ="";
+        for ( $i = 0; $i < $length; $i++ )  {
+            $str .= substr($chars, mt_rand(0, strlen($chars)-1), 1);
+        }
+        return strtoupper($str);
     }
 }
