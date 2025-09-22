@@ -6,9 +6,9 @@ class WdsWxMiniProgram
     protected  $AppId;
     protected  $AppSecret;
     protected  $ApiKey;
+
     /**
      * WxMiniProgram constructor.
-     * @param array $config
      * 初始化
      */
     public function __construct(string $AppId, string $AppSecret, string $ApiKey)
@@ -28,6 +28,8 @@ class WdsWxMiniProgram
         $res = json_decode(WdsUtil::httpRequest($url));
         if(!empty($res->access_token))
             return $res->access_token;
+
+        return false;
     }
 
     /**
@@ -163,6 +165,8 @@ class WdsWxMiniProgram
         //图片是否存在
         if(file_exists($filePath))
             return  $filePath;
+
+        return false;
     }
 
 
